@@ -115,14 +115,13 @@ public class MainActivity extends WearableActivity implements SensorEventListene
         mAccYQ.add(values[1]);
         mAccZQ.add(values[2]);
 
-//        Vector stats = mDProc.calcStats(new Vector(Arrays.asList(mAccXQ.toArray())));
+        Vector<Float> stats = mDProc.calcMean(mAccXQ);
         String mMesgAcc;
-        mMesgAcc = String.format("Acc: %.1f, %.1f, %.1f, %.1f, %.1f",
+        mMesgAcc = String.format("Acc: %.2f, %.2f, %.2f, %.2f",
                                         values[0],
                                         values[1],
-                                        values[2]);
-//                                        stats.get(0),
-//                                        stats.get(1));
+                                        values[2],
+                                        stats.elementAt(0));
         return mMesgAcc;
     }
 

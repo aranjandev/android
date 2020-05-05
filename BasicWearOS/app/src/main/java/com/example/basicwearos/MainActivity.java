@@ -1,5 +1,6 @@
 package com.example.basicwearos;
 
+import android.annotation.SuppressLint;
 import android.os.Bundle;
 import android.support.wearable.activity.WearableActivity;
 import android.widget.TextView;
@@ -24,17 +25,19 @@ public class MainActivity extends WearableActivity implements SensorEventListene
     private HashMap sensorMessages;
     private HashMap sensorMessagePrefix;
     private static final int Q_SZ = 500;
+    private static final int N_CHANNELS = 10;
     // Map to store the starting Q index and number of Qs for a given sensor
     private HashMap sensorDataIndex;
     private Vector<EvictingQueue<Float>> allDataQ;
-//    DataSampleProcessor mDProc;
+    DataSampleProcessor dataProcessor;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-//        mDProc = new DataSampleProcessor();
+        dataProcessor = new DataSampleProcessor(N_CHANNELS, Q_SZ);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         mTextView = (TextView) findViewById(R.id.text);
+        mTextView.setMaxLines(8);
         initSensorMessages();
         // initialize all Qs for data
         initAllDataQ();
@@ -106,13 +109,38 @@ public class MainActivity extends WearableActivity implements SensorEventListene
         return df.format(c.getTime());
     }
 
+    private String getMeanString(){
+        String meanString = "";
+        float[] allMeans;
+        try{
+            allMeans = dataProcessor.calcAllMean();
+            StringBuilder allMeansString = new StringBuilder("M:");
+            for (float allMean : allMeans) {
+                allMeansString.append(String.format("%.1f,", allMean));
+            }
+            meanString = String.format("%s", allMeansString.toString());
+        }
+        catch (Exception e){
+            Log.d(TAG, "dataProcessor.calcAllMean exception: " + e.toString());
+        }
+        return meanString;
+    }
+
+    @SuppressLint("DefaultLocale")
     private void handleSensorData(int sensorType, float values[]) {
         Pair<Integer, Integer> indNum = (Pair<Integer, Integer>) sensorDataIndex.get(sensorType);
         int startInd = indNum.first.intValue();
         String dataString = "";
+        int channelInd = 0;
         for(int i=0; i<indNum.second.intValue(); i++){
-            allDataQ.elementAt(startInd + i).add(values[i]);
-            dataString += String.format("%.2f, ", values[i]);
+            channelInd = startInd + i;
+            allDataQ.elementAt(channelInd).add(values[i]);
+            dataString += String.format("%.1f, ", values[i]);
+            Log.d(TAG, "** channelInd being set = " + channelInd);
+            boolean good = dataProcessor.setData(allDataQ.elementAt(channelInd), channelInd);
+            if(!good){
+                Log.e(TAG, "-- Error setting data dataProcessor.setData()");
+            }
         }
         updateSensorMessage(sensorType, dataString);
     }
@@ -124,7 +152,7 @@ public class MainActivity extends WearableActivity implements SensorEventListene
                             (String) sensorMessages.get(Sensor.TYPE_GYROSCOPE) + "\n" +
                             (String) sensorMessages.get(Sensor.TYPE_GRAVITY) + "\n" +
                             (String) sensorMessages.get(Sensor.TYPE_HEART_RATE);
-        Log.d(TAG, "screen string = " + viewString);
+        viewString += "\n" + getMeanString();
         mTextView.setText(viewString);
     }
 

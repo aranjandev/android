@@ -1,9 +1,6 @@
 package com.example.basicwearos;
 
-import android.util.Log;
-
 import com.google.common.collect.EvictingQueue;
-
 import java.util.Iterator;
 
 public class DataSampleProcessor {
@@ -52,18 +49,5 @@ public class DataSampleProcessor {
             means[c] = means[c] / TS_LEN;
         }
         return means;
-    }
-
-    // Simple mean calculation method
-    public float calcMean(int channel) throws Exception{
-        float mean = 0.0f;
-        if(channel >= N_CHANNELS){
-            throw new Exception(String.format("Channel index %d exceeded N_CHANNELS %d", channel, N_CHANNELS));
-        }
-        for(int i=0; i<TS_LEN; i++){
-            mean += allChannelData[channel][i];
-        }
-        mean = mean/TS_LEN;
-        return mean;
     }
 }

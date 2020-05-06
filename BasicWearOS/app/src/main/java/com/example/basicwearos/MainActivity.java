@@ -191,7 +191,7 @@ public class MainActivity extends WearableActivity implements SensorEventListene
 
     private void writeSensorDataToFile(String sensorString){
         try {
-            String writeString = getCurrentTimeStr() + "," + sensorString + "\n";
+            String writeString = String.format("%d,%s\n", System.currentTimeMillis(), sensorString);
             sensorLogStream.write(writeString.getBytes());
         }
         catch(IOException | NullPointerException e)
